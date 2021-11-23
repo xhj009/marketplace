@@ -18,5 +18,5 @@ public class Pedidodto {
 	private int id;
 	private String nombre;
 	private Date fecha;
-	private List<Articulodto> articulos;
+	private List<ArticulosPedidosDto> articulos;
 }

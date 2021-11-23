@@ -2,128 +2,123 @@ package es.oi.marketplace.service;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import es.oi.marketplace.dto.Articulodto;
+import es.oi.marketplace.dto.ArticulosPedidosDto;
 import es.oi.marketplace.dto.Pedidodto;
-import es.oi.marketplace.entity.Articulo;
+
 import es.oi.marketplace.entity.Pedido;
+import es.oi.marketplace.entity.PerteneceA;
+import es.oi.marketplace.repository.ArticuloRepository;
 import es.oi.marketplace.repository.PedidoRepository;
 
 @Service
 public class PedidoService {
 	@Autowired
 	PedidoRepository pedidoRepository;
-	
+	@Autowired
+	ArticuloRepository articuloRepository;
+		
 	public Pedidodto buscarPedido(int id) {
-		
+		List<ArticulosPedidosDto> lista = new ArrayList<>();
 		Pedido pedido = pedidoRepository.findById(id).get();
+		Pedidodto dto = new Pedidodto();
+		dto.setId(pedido.getId());
+		dto.setFecha(pedido.getFecha());
+		dto.setNombre(pedido.getNombre());
 		
+		for(PerteneceA articulo:pedido.getPedidos()) {
+			ArticulosPedidosDto tmp = new ArticulosPedidosDto();
+			tmp.setId( articulo.getCantidad());
+			tmp.setCantidad(articulo.getCantidad());
+			
+			lista.add(tmp);
+		}
+		dto.setArticulos(lista);
+
+		return dto;
 		
-		List<Articulo> articulos = new ArrayList<>();
-		List<Articulodto> listarArticulodtos = new ArrayList<>();
-		
-		for (Articulo articulo: articulos) {
-			Articulodto articulodto = Articulodto.builder()
-					.nombre(articulo.getNombre())
-					.precio(articulo.getPrecio())
-					.stock(articulo.getStock())
-					.build();
-			listarArticulodtos.add(articulodto);
 		}
 		
-		
-		Pedidodto pedidodto = Pedidodto.builder()
-				.nombre(pedido.getNombre())
-				.fecha(pedido.getFecha())
-				.articulos(listarArticulodtos)
-				.build();
-			return pedidodto;
-	}
+
 	
 	public void crearPedido(Pedidodto pedidodto) {
-		List<Pedido> pedidos = new ArrayList<>();
-		List<Pedidodto> listaPedidos = new ArrayList<>();
-		List<Articulodto> listaArticulos = new ArrayList<>();
-		List<Articulo> articulos = new ArrayList<>();
-		//Pedido pedido = new Pedido();
 		
-		for (Articulo articulo : articulos) {
-			Articulodto articulodto = Articulodto.builder()
-					.nombre(articulo.getNombre())
-					.precio(articulo.getPrecio())
-					.stock(articulo.getStock())
-					.build();
-			listaArticulos.add(articulodto);
+		Pedido pedido = new Pedido();
+		List<PerteneceA> lista = new ArrayList<>();
+		
+		for(ArticulosPedidosDto tmp : pedidodto.getArticulos() ) {
+			PerteneceA perteneceA = new PerteneceA();
+			perteneceA.setArticulo(articuloRepository.findById(tmp.getId()).get());
+			perteneceA.setCantidad(tmp.getCantidad());
+			perteneceA.setPedido(pedido);
+			
+			lista.add(perteneceA);
 		}
 		
-		for (Pedido pedido : pedidos) {
-			Pedidodto pedidodto1 = Pedidodto.builder()
-					.nombre(pedido.getNombre())
-					.fecha(pedido.getFecha())
-					.articulos(listaArticulos)
-					.build();
-			listaPedidos.add(pedidodto1);
-		}
-		
-//		pedido.setNombre(pedidodto.getNombre());
-//		pedido.setFecha(pedidodto.getFecha());
-//		pedido.setPedidos(listaArticulos);
-		pedidoRepository.save(listaPedidos);
-	}
-	
-	public void actualizarPedido(int id,Pedidodto pedidodto) {
-		Pedido pedido = pedidoRepository.findById(id).get();
-		List<Articulo> articulos = new ArrayList<>();
-		List<Articulodto> listaArticulos = new ArrayList<>();
-		
-		for (Articulo articulo : articulos) {
-			Articulodto articulodto = Articulodto.builder()
-					.nombre(articulo.getNombre())
-					.precio(articulo.getPrecio())
-					.stock(articulo.getStock())
-					.build();
-			listaArticulos.add(articulodto);
-
-		}
-		
-		pedido.setNombre(pedidodto.getNombre());
 		pedido.setFecha(pedidodto.getFecha());
-		pedido.setPedidos(listaArticulos);
+		pedido.setNombre(pedidodto.getNombre());
+		pedido.setPedidos(lista);
+		
+		pedidoRepository.save(pedido);
+
 	}
 	
-	public void delete(int id) {
-		pedidoRepository.deleteById(id);
+	public void actualizar(Pedidodto pedidodto,Integer id) {
+		
+		Pedido pedido = pedidoRepository.getById(id);
+		List<PerteneceA> lista = new ArrayList<>();
+		
+		for(ArticulosPedidosDto tmp : pedidodto.getArticulos() ) {
+			PerteneceA perteneceA = new PerteneceA();
+			perteneceA.setArticulo(articuloRepository.findById(tmp.getId()).get());
+			perteneceA.setCantidad(tmp.getCantidad());
+			perteneceA.setPedido(pedido);
+			
+			
+			lista.add(perteneceA);
+		}
+		
+		pedido.setId(pedidodto.getId());
+		pedido.setFecha(pedidodto.getFecha());
+		pedido.setNombre(pedidodto.getNombre());
+		pedido.setPedidos(lista);
+		
+		pedidoRepository.save(pedido);
+
 	}
+
 	
+	public void delete(Integer id) {
+	      Pedido p = pedidoRepository.findById(id).get();
+	      p.getUsuario().getPedidos().remove(p);
+	     pedidoRepository.deleteById(id);
+
+	   }
+	
+
+		
 	public List<Pedidodto> buscarPedidosQueContengan(String nombre){
 		List<Pedido> contenga = pedidoRepository.findByNombreContaining(nombre);
-		List<Pedidodto> pedidos = new ArrayList<>();
-		
-		List<Articulo> articulos = new ArrayList<>();
-		List<Articulodto> listaArticulos = new ArrayList<>();
-		
-		for (Articulo articulo : articulos) {
-			Articulodto articulodto = Articulodto.builder()
-					.nombre(articulo.getNombre())
-					.precio(articulo.getPrecio())
-					.stock(articulo.getStock())
-					.build();
-			listaArticulos.add(articulodto);
-		}
-		
+		List<ArticulosPedidosDto> listaArticulos = new ArrayList<>();
+		List<Pedidodto> lista = new ArrayList<>();
 		
 		for (Pedido pedido : contenga) {
-			Pedidodto pedidodto = Pedidodto.builder()
-					.nombre(pedido.getNombre())
-					.fecha(pedido.getFecha())
-					.articulos(listaArticulos)
-					.build(); 
-			pedidos.add(pedidodto);
+			Pedidodto dto = new Pedidodto();
+			dto.setId(pedido.getId());
+			dto.setNombre(pedido.getNombre());
+			dto.setFecha(pedido.getFecha());
+
+
+			for(PerteneceA tmp : pedido.getPedidos() ) {
+				ArticulosPedidosDto articulosPedidosDto = new ArticulosPedidosDto();
+				articulosPedidosDto.setId(tmp.getArticulo().getId());
+				articulosPedidosDto.setCantidad(tmp.getCantidad());
+				listaArticulos.add(articulosPedidosDto);
+			}
+			dto.setArticulos(listaArticulos);
+			lista.add(dto);
 		}
-		return pedidos;
-	}
-	
+		return lista;
+	}	
 }

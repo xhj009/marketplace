@@ -45,7 +45,7 @@ public class ArticuloService {
 	
 	public List<Articulodto> articulosQueContengan(String nombreparcial) {
 		List<Articulodto> articulos = new ArrayList<>();
-		 List<Articulo> contengan = articuloRepository.findByNombreContaining(nombreparcial);
+		List<Articulo> contengan = articuloRepository.findByNombreContaining(nombreparcial);
 		
 		for (Articulo articulo : contengan) {
 

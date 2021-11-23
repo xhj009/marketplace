@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.oi.marketplace.dto.Articulodto;
+import es.oi.marketplace.dto.ArticulosPedidosDto;
 import es.oi.marketplace.dto.Pedidodto;
 import es.oi.marketplace.service.PedidoService;
 
@@ -23,6 +23,9 @@ import es.oi.marketplace.service.PedidoService;
 public class PedidoController {
 	@Autowired
 	PedidoService pedidoService;
+	
+	ArticulosPedidosDto articulosPedidosDto;
+
 	
 	@GetMapping(path = "/{id}")
 	public Pedidodto buscarPedido(@PathVariable int id) {
@@ -35,15 +38,23 @@ public class PedidoController {
 		return new ResponseEntity<String> (HttpStatus.ACCEPTED);
 	}
 	
-	@PutMapping("/{id}")
-	public ResponseEntity<String> actualizarPedido(@PathVariable int id,Pedidodto pedidodto){
-		return new ResponseEntity<String>(pedidoService.actualizarPedido(id, pedidodto));
+	@PutMapping(path =  "/{id}")
+	public ResponseEntity<String> actualizarPedido(@PathVariable Integer id, @RequestBody Pedidodto pedidodto){
+		
+		if (id.equals(pedidodto.getId())) {
+			pedidoService.actualizar(pedidodto, id);
+			return new ResponseEntity<String>(HttpStatus.ACCEPTED);
+		}else {
+			return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
+		}
+		
 	}
 	
 	
 	@DeleteMapping(path =  "/{id}")
-	public void eliminarPedido(@PathVariable int id) {
+	public ResponseEntity<String> eliminarPedido(@PathVariable Integer id) {
 		pedidoService.delete(id);
+		return new ResponseEntity<String>(HttpStatus.ACCEPTED);
 	}
 	
 	@GetMapping(path = "/nombre/{nombreparcial}")
